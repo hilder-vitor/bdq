@@ -1,5 +1,7 @@
 <?php
 
+namespace classes_;
+
 class Filtro {
 
 	private $id;	 // o id do filtro
@@ -33,6 +35,3 @@ class Filtro {
 	}
 
 }
-
-
-?>
