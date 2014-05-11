@@ -21,9 +21,12 @@ class BDManager{
 
     public function conectar(){
         try{
+	   $opcoes = array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8');
 	   $dados = parseConfigFile();
 	   $dadosBd = $dados['bd'];
-	   $this->bd = new PDO("$dadosBd[gerenciador]:host=$dadosBd[host];port=$dadosBd[porta];dbname=$dadosBd[nomeDoBanco]", $dadosBd['usuario'], $dadosBd['senha']);
+	   $this->bd = new PDO("$dadosBd[gerenciador]:host=$dadosBd[host];"
+			     . "port=$dadosBd[porta];dbname=$dadosBd[nomeDoBanco]",
+			     $dadosBd['usuario'], $dadosBd['senha'], $opcoes);
         }catch(PDOException $e){
 	   exit ("Não foi possível se conectar com o banco de dados\n");
         }
@@ -89,20 +92,21 @@ class BDManager{
     }
 
     
-    public function insereFiltro($nome, $idPai = null){
+    public function insereFiltro($idAntigo, $nome, $idPai = null){
         $filtro = $this->selecionaFiltro(null, $nome);
         // se não existir um filtro com o nome passado, insere-o
         if ($filtro == null){
 	   // só faz o inserte se o id do pai for nulo
 	   // ou for um id que existe no banco
 	   if ($idPai != null && count($this->selecionaFiltro($idPai))){
-	       $cmd = "INSERT INTO filtros(filtro, id_filtro_pai)"
-		      . " VALUES ('$nome',$idPai)";
+	       $cmd = "INSERT INTO filtros(filtro, id_filtro_pai, id_antigo)"
+		      . " VALUES (\"$nome\",$idPai, $idAntigo)";
 	       // 1 é o número de linhas alteradas
 	       return (1 == $this->bd->exec($cmd));
 	   }else if($idPai == null){
-	       $cmd = "INSERT INTO filtros(filtro, id_filtro_pai)"
-			. " VALUES ('$nome',NULL)";
+	       $cmd = "INSERT INTO filtros(filtro, id_filtro_pai, id_antigo)"
+			. " VALUES (\"$nome\",NULL, $idAntigo)";
+	       
 	       return (1 == $this->bd->exec($cmd));
 	   }
 	   return false; // se o idPai é diferente de null mas o pai não existe
