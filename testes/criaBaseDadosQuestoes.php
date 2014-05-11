@@ -76,10 +76,8 @@ $k = 1;
 while ($dados = mysql_fetch_assoc($rsFiltros)){
         $idFiltro = $dados['id_filtro'];
         $idDisciplina = $dados["id_disciplina"];
-        //$disciplina = $dados["disciplina"];
+        
         $disciplina = arrumaAcento($dados["disciplina"]);
-        //$disciplina = html_entity_decode($dados["disciplina"]);
-        //$disciplina = htmlspecialchars_decode($dados["disciplina"]);
         
         $bdq->insereFiltro($disciplina);
         
