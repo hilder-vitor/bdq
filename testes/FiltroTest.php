@@ -1,6 +1,8 @@
 <?php
 
-require_once "../fonte/Filtro.class.php";
+require_once '../autoloader.php';
+
+use classes_\Filtro as Filtro;
 
 class FiltroTest extends PHPUnit_Framework_TestCase
 {
@@ -8,9 +10,10 @@ class FiltroTest extends PHPUnit_Framework_TestCase
     public function testGetId()
     {
         $filtro = new Filtro(4, 'Matemática');
-     
-        $this->assertEquals(5, $filtro->getId());
         $this->assertEquals(4, $filtro->getId());
+        
+        $filtro = new Filtro(0, 'Matemática');
+        $this->assertEquals(0, $filtro->getId());
     }
 
 }
