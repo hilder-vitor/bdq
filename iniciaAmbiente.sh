@@ -23,6 +23,8 @@ echo '
 	}
 }' > composer.json
 
+# instala as dependências
+php composer.phar install
 
 cd ../
 
@@ -30,8 +32,7 @@ mkdir recursos/
 
 ##############  ALTERE AQUI COLOCANDO SEUS DADOS DO BANCO DE DADOS ########################
 
-echo '# instala as dependências
-php composer.phar install
+echo '
 ; Arquivo de configuração do projeto do BDQ
 
 [bd]
