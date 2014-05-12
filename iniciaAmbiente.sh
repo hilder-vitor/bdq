@@ -24,5 +24,21 @@ echo '
 }' > composer.json
 
 
-# instala as dependências
+cd ../
+
+mkdir recursos/
+
+##############  ALTERE AQUI COLOCANDO SEUS DADOS DO BANCO DE DADOS ########################
+
+echo '# instala as dependências
 php composer.phar install
+; Arquivo de configuração do projeto do BDQ
+
+[bd]
+; Nome do gerenciador de banco de dados
+gerenciador = mysql
+host = localhost
+porta = 3306
+nomeDoBanco = bancoDeQuestoes
+usuario = <usuario>
+senha = <senha>' > recursos/config.ini
