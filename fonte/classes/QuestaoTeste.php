@@ -17,14 +17,19 @@ class QuestaoTeste extends Questao {
         return $this->indiceAlternativaCorreta;
     }
 
-    public function setAlternativas($alternativas) {
-        $this->alternativas = $alternativas;
-    }
-
-    public function setIndiceAlternativaCorreta($k) {
-        if (isset($this->alternativas[$k])){
-	   $this->indiceAlternativaCorreta = $k;
+    /**
+     *   Associa uma alternativa à questão.
+     * 
+     * @param String $alternativa Texto da alternativa que vai ser associada à questão.
+     * @param boolean $correta (falso por padrão) Se for verdadeiro, então esta alternativa
+     *		      será marcada como correta.
+     */
+    public function adicionaAlternativa($alternativa, $correta = false) {
+        $this->alternativas[] = $alternativa;
+        if ($correta){
+	   $this->indiceAlternativaCorreta = (count($this->alternativas) - 1);
         }
     }
+
 
 }
