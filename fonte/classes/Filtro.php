@@ -4,34 +4,48 @@ namespace classes_;
 
 class Filtro {
 
-	private $id;	 // o id do filtro
-	private $nome;	 // o nome do filtro (por exemplo "Biologia")
-	private $filhos; // um array de filtros
+    private $id;	 // o id do filtro
+    private $nome;	 // o nome do filtro (por exemplo "Biologia")
+    private $idPai;	 // id do filtro pai
+    private $filhos;	 // um array de filtros
 
+    public function __construct ($id, $nome, $idPai = null){
+	    $this->id = $id;
+	    $this->nome = $nome;
+	    $this->filhos = array();
+	    $this->idPai = $idPai;
+    }
 
-	public function __construct ($id, $nome){
-		$this->id = $id;
-		$this->nome = $nome;
-		$this->filhos = array();
-	}
+    public function getNome(){
+        return $this->nome;
+    }
 
-	public function adicionaFilho (Filtro $filho){
-		$this->filhos[$filho->getId()] = $filho;
-	}
+    public function adicionaFilho (Filtro $filho){
+	    $this->filhos[$filho->getId()] = $filho;
+    }
 
-	public function getFilho ($id = null){
-		if ($id == null){
-			return $this->filhos;
-		}
+    public function getFilho ($id = null){
+	    if ($id == null){
+		    return $this->filhos;
+	    }
 
-		if (isset($this->filhos[$id])){
-			return $this->filhos[$id];
-		}
-		return null;
-	}
+	    if (isset($this->filhos[$id])){
+		    return $this->filhos[$id];
+	    }
+	    return null;
+    }
 
-	public function getId(){
-		return $this->id;
-	}
+    public function getId(){
+	    return $this->id;
+    }
 
+    public function getIdPai(){
+        return $this->idPai;
+    }
+
+    public function setPai($idPai){
+        if ($idPai > 0){
+	  $this->idPai = $idPai;
+        }
+    }
 }
