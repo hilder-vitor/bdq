@@ -48,4 +48,17 @@ class Filtro {
 	  $this->idPai = $idPai;
         }
     }
+    
+    private function getListaIdsFilhosRec($vetFilhos){
+        $ids = array_keys($vetFilhos);
+        foreach ($vetFilhos as $filtro){
+	  $idsFilhos = $this->getListaIdsFilhosRec($filtro->getFilho());
+	  $ids = array_merge($ids, $idsFilhos);
+        }
+        return $ids;
+    }
+    
+    public function getListaIdsFilhos(){
+        return $this->getListaIdsFilhosRec($this->filhos);
+    }
 }
