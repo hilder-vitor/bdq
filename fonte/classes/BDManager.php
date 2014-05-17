@@ -1,13 +1,12 @@
 <?php
 
 namespace classes_;
-
-use classes_\Filtro;
 use PDO;
 use PDOException;
 
 class BDManager{
 
+    /* @var $bd PDO */
     private $bd;
 
     public function __construct(){
@@ -74,7 +73,7 @@ class BDManager{
 	       // se os filhos também devem ser selescionados
 	       if ($pegarFilhos){
 		       // seleciona os filtros que têm este como pai
-		       foreach($this->selecionaFiltro(null, null, $linha['id_filtro']) as $filho){
+		       foreach($this->selecionaFiltro(null, null, $linha['id_filtro'], $pegarFilhos) as $filho){
 			       $filtro->adicionaFilho($filho);
 		       }
 	       }
@@ -92,7 +91,7 @@ class BDManager{
     }
 
     
-    public function insereFiltro($idAntigo, $nome, $idPai = null){
+    public function insereFiltro($nome, $idPai = null){
         $filtro = $this->selecionaFiltro(null, $nome);
         // se não existir um filtro com o nome passado, insere-o
         if ($filtro == null){
@@ -100,12 +99,12 @@ class BDManager{
 	   // ou for um id que existe no banco
 	   if ($idPai != null && count($this->selecionaFiltro($idPai))){
 	       $cmd = "INSERT INTO filtros(filtro, id_filtro_pai, id_antigo)"
-		      . " VALUES (\"$nome\",$idPai, $idAntigo)";
+		      . " VALUES (\"$nome\",$idPai)";
 	       // 1 é o número de linhas alteradas
 	       return (1 == $this->bd->exec($cmd));
 	   }else if($idPai == null){
 	       $cmd = "INSERT INTO filtros(filtro, id_filtro_pai, id_antigo)"
-			. " VALUES (\"$nome\",NULL, $idAntigo)";
+			. " VALUES (\"$nome\",NULL)";
 	       
 	       return (1 == $this->bd->exec($cmd));
 	   }
@@ -113,5 +112,84 @@ class BDManager{
         }
         return false;
     }
+    
+    private function selecionaAlternativas($idQuestao){
+        $cmd = "SELECT id_alternativa, id_questao, texto_alternativa, gabarito, letra"
+	   . " FROM alternativa WHERE id_questao = $idQuestao";
+        // TODO: percorrer o retorno do select e criar o vetor com as alternativas
+        $this->bd->query($cmd);
+        $alternativas = array();
+        foreach ($this->bd->query($cmd) as $alt){
+	   $alternativas[] = array('idAlternativa' => $alt['idAlternativa'],
+				'idQuestao' => $alt['idQuestao'],
+				'texto' => $alt['textoAlternativa'],
+				'gabarito' => ($alt['gabarito'] == 1));
+        }
+        return $alternativas;
+    }
+    
+    private function selecionaUmaQuestao($id = null, $enunciado = null){
+        if ($id === null && $enunciado === null){
+	   return null;
+        }
+        $cmd = 'SELECT * FROM questao WHERE 1 = 1';
+        $assoc = array();
+        if ($id != null){
+	        $cmd .= 'AND id_questao = :id ';
+	        $assoc[':id'] = $id;
+        }
+        if ($enunciado != null){
+	        $cmd .= 'AND enunciado = :enunciado ';
+	        $assoc[':enunciado'] = $enunciado;
+        }
+        $st = $this->bd->prepare($cmd);
+        if($st->execute($assoc)){
+	   $linha = $st->fetch(PDO::FETCH_ASSOC);
+	   // se é uma questão dissertativa
+	   if ($linha['tipo'] == Questao::QUESTAO_DISSERTATIVA){
+	       return new QuestaoDisserativa($linha['id_questao'], $linha['enunciado'], $linha['ano']);
+	   }
+	   // se é uma questão alternativa
+	   if ($linha['tipo'] == Questao::QUESTAO_ALTERNATIVA){
+	       $questao = new QuestaoTeste($linha['id_questao'], $linha['enunciado'], $linha['ano']);
+	       // seleciona alternativas
+	       foreach ($this->selecionaAlternativas($linha['id_questao']) as $alt){
+		  $questao->adicionaAlternativa($alt['texto'], $alt['gabarito']);
+	       }
+	       return $questao;
+	   }
+        }
+        return null;
+    }
 
+    /**
+     *  TODO: IMPLEMENTAR ESTE MÉTODO
+     * 
+     * 
+     * @param int $id
+     * @param Filtro[] $filtros
+     * @param String $enunciado
+     * @param int $tipo Questao::QUESTAO_ALTERNATIVA ou Questao::QUESTAO_DISSERTATIVA
+     * @return Se for passado o id ou o enunciado
+     */
+    public function selecionaQuestao ($id = null, $filtros = array(), $enunciado = null, $tipo = null){
+        if ($id != null || $enunciado != null){
+	   return $this->selecionaUmaQuestao($id, $enunciado);
+        }
+        
+    }    
+    
+    public function insereQuestaoDissertativa (QuestaoDisserativa $q, $idAntigo){
+        $cmd = "INSERT INTO questao(enunciado, ano, tipo, id_antigo)"
+			. " VALUES (\":enunciado\",:ano, :tipo, :id_antigo)";
+        $assoc = array();
+        $assoc[':enunciado'] = $q->getEnunciado();
+        $assoc[':ano'] = $q->getAno();
+        $assoc[':tipo'] = Questao::QUESTAO_DISSERTATIVA;
+        $assoc[':id_antigo'] = $idAntigo;
+        $st = $this->bd->prepare($cmd);
+
+        return $st->execute($assoc);
+    }
+    
 }

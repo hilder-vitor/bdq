@@ -1,6 +1,6 @@
 <?php
 
-$raiz = '/var/www/bancoDeQuestoes/';
+$raiz = '/var/www/bdq/';
 
 function autoload($Class) {
     global $raiz;
