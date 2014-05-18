@@ -114,11 +114,10 @@ class BDManager{
     private function selecionaAlternativas($idQuestao){
         $cmd = "SELECT idAlternativa, idQuestao, textoAlternativa, gabarito, letra"
 	   . " FROM alternativa WHERE idQuestao = $idQuestao";
-        // TODO: percorrer o retorno do select e criar o vetor com as alternativas
         $this->bd->query($cmd);
         $alternativas = array();
         foreach ($this->bd->query($cmd) as $alt){
-	   $alternativas[] = array('idAlternativa' => $alt['idAlternativa'],
+	   $alternativas[$alt['idAlternativa']] = array('idAlternativa' => $alt['idAlternativa'],
 				'idQuestao' => $alt['idQuestao'],
 				'texto' => $alt['textoAlternativa'],
 				'gabarito' => ($alt['gabarito'] == 1));
@@ -204,8 +203,8 @@ class BDManager{
     }
     
     private function insereAlternativa (Alternativa $alt, $idQuestao) {
-        $cmd = "INSERT INTO alternativa(texto,gabarito,idQuestao)"
-			. " VALUES (\":texto\",:gabarito, :idQ)";
+        $cmd = "INSERT INTO alternativa(textoAlternativa,gabarito,idQuestao)"
+			. " VALUES (:texto,:gabarito, :idQ)";
         $assoc = array();
         $assoc[':texto'] = $alt->getTexto();
         $assoc[':gabarito'] = $alt->getEhCorreta();
@@ -217,7 +216,7 @@ class BDManager{
     
     public function insereQuestaoTeste (QuestaoTeste $q, $idAntigo){
         $cmd = "INSERT INTO questao(enunciado, ano, tipo, idAntigo)"
-			. " VALUES (\":enunciado\",:ano, :tipo, :idAntigo)";
+			. " VALUES (:enunciado,:ano, :tipo, :idAntigo)";
         $assoc = array();
         $assoc[':enunciado'] = $q->getEnunciado();
         $assoc[':ano'] = $q->getAno();
@@ -233,7 +232,7 @@ class BDManager{
 	   while ($alt = $q->proximaAlternativa()){
 	       // se alguma alternativa não seja inserida corretamente
 	       if (!$this->insereAlternativa($alt, $q->getId())){
-		  $bd->rollBack(); // desfaz todas as inserções (da questao e das alternativas)
+		  $this->bd->rollBack(); // desfaz todas as inserções (da questao e das alternativas)
 		  return false;
 	       }
 	   }
@@ -241,5 +240,5 @@ class BDManager{
 	   return true;
         }
         return false;
-    }   
+    }
 }

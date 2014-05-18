@@ -2,8 +2,10 @@
 
 require_once '../autoloader.php';
 
-use classes_\QuestaoDisserativa as QuestaoDisserativa;
+use classes_\Alternativa as Alternativa;
 use classes_\BDManager as BDManager;
+use classes_\QuestaoDisserativa as QuestaoDisserativa;
+use classes_\QuestaoTeste as QuestaoTeste;
 
 
 class BDManagerTest extends PHPUnit_Framework_TestCase
@@ -11,8 +13,18 @@ class BDManagerTest extends PHPUnit_Framework_TestCase
     
     public function testInsereQuestaoDissertativa(){
         $bd = new BDManager();
-        $q = new QuestaoDisserativa(3, 'Quem é que foi que descobriu o brasil?', 2013);
+        $q = new QuestaoDisserativa(1234598763, 'Quem que descobriu o Brasil?', 2013);
         $this->assertTrue($bd->insereQuestaoDissertativa($q, 13));
+    }
+    
+    public function testInsereQuestaoTeste(){
+        $bd = new BDManager();
+        $q = new QuestaoTeste(1234598763, 'Quem que descobriu o Brasil?', 2013);
+        $q->adicionaAlternativa(new Alternativa(3, 'Pedro Pedreiro'));
+        $q->adicionaAlternativa(new Alternativa(4, 'Gil Brother'));
+        $q->adicionaAlternativa(new Alternativa(2, 'Pedro Alváres Cabral', true));
+        $q->adicionaAlternativa(new Alternativa(7, 'Cabraliz'));
+        $this->assertTrue($bd->insereQuestaoTeste($q, 13));
     }
     
     public function testInsereFiltro()
