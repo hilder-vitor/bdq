@@ -52,32 +52,31 @@ class BDManager{
         $cmd = 'SELECT * FROM filtros WHERE 1 = 1 ';
         $assoc = array();
         if ($id != null){
-	        $cmd .= 'AND id_filtro = :id ';
-	        $assoc[':id'] = $id;
+	   $cmd .= 'AND idFiltro = ? ';
+	   $assoc[] = $id;
         }
         if ($nome != null){
-	        $cmd .= 'AND filtro = :nome ';
-	        $assoc[':nome'] = $nome;
+	   $cmd .= 'AND filtro = ? ';
+	   $assoc[] = $nome;
         }
         if ($idPai != null){
-	        $cmd .= 'AND id_filtro_pai = :idPai ';
-	        $assoc[':idPai'] = $idPai;
+	   $cmd .= 'AND idFiltroPai = ? ';
+	   $assoc[] = $idPai;
         }
 
         $st = $this->bd->prepare($cmd);
-
         if($st->execute($assoc)){
 	   $resp = array();
 	   while ($linha = $st->fetch(PDO::FETCH_ASSOC)){
-	       $filtro = new Filtro($linha['id_filtro'], $linha['filtro'], $linha['id_filtro_pai']);
+	       $filtro = new Filtro($linha['idFiltro'], $linha['filtro'], $linha['idFiltroPai']);
 	       // se os filhos também devem ser selescionados
 	       if ($pegarFilhos){
-		       // seleciona os filtros que têm este como pai
-		       foreach($this->selecionaFiltro(null, null, $linha['id_filtro'], $pegarFilhos) as $filho){
-			       $filtro->adicionaFilho($filho);
-		       }
+		  // seleciona os filtros que têm este como pai
+		  foreach($this->selecionaFiltro(null, null, $linha['idFiltro'], true) as $filho){
+		      $filtro->adicionaFilho($filho);
+		  }
 	       }
-	       $resp[$linha['id_filtro']] = $filtro;
+	       $resp[$linha['idFiltro']] = $filtro;
 	   }
 	   // se o id ou o nome foi passado, o resultado obrigatoriamente tem
 	   // apenas um Filtro, então, devolve-o.
@@ -91,21 +90,20 @@ class BDManager{
     }
 
     
-    public function insereFiltro($nome, $idPai = null){
+    public function insereFiltro($nome, $idPai = null, $idAntigo = 0){
         $filtro = $this->selecionaFiltro(null, $nome);
         // se não existir um filtro com o nome passado, insere-o
         if ($filtro == null){
 	   // só faz o inserte se o id do pai for nulo
 	   // ou for um id que existe no banco
 	   if ($idPai != null && count($this->selecionaFiltro($idPai))){
-	       $cmd = "INSERT INTO filtros(filtro, id_filtro_pai, id_antigo)"
-		      . " VALUES (\"$nome\",$idPai)";
+	       $cmd = "INSERT INTO filtros(filtro, idFiltroPai, idAntigo)"
+		      . " VALUES (\"$nome\",$idPai,$idAntigo)";
 	       // 1 é o número de linhas alteradas
 	       return (1 == $this->bd->exec($cmd));
 	   }else if($idPai == null){
-	       $cmd = "INSERT INTO filtros(filtro, id_filtro_pai, id_antigo)"
-			. " VALUES (\"$nome\",NULL)";
-	       
+	       $cmd = "INSERT INTO filtros(filtro, idFiltroPai, idAntigo)"
+			. " VALUES (\"$nome\",NULL,$idAntigo)";
 	       return (1 == $this->bd->exec($cmd));
 	   }
 	   return false; // se o idPai é diferente de null mas o pai não existe
@@ -114,8 +112,8 @@ class BDManager{
     }
     
     private function selecionaAlternativas($idQuestao){
-        $cmd = "SELECT id_alternativa, id_questao, texto_alternativa, gabarito, letra"
-	   . " FROM alternativa WHERE id_questao = $idQuestao";
+        $cmd = "SELECT idAlternativa, idQuestao, textoAlternativa, gabarito, letra"
+	   . " FROM alternativa WHERE idQuestao = $idQuestao";
         // TODO: percorrer o retorno do select e criar o vetor com as alternativas
         $this->bd->query($cmd);
         $alternativas = array();
@@ -194,16 +192,54 @@ class BDManager{
     }
     
     public function insereQuestaoDissertativa (QuestaoDisserativa $q, $idAntigo){
-        $cmd = "INSERT INTO questao(enunciado, ano, tipo, id_antigo)"
-			. " VALUES (\":enunciado\",:ano, :tipo, :id_antigo)";
+        $cmd = "INSERT INTO questao(enunciado, ano, tipo, idAntigo)"
+			. " VALUES (:enunciado,:ano,:tipo,:idAntigo)";
         $assoc = array();
         $assoc[':enunciado'] = $q->getEnunciado();
         $assoc[':ano'] = $q->getAno();
         $assoc[':tipo'] = Questao::QUESTAO_DISSERTATIVA;
-        $assoc[':id_antigo'] = $idAntigo;
+        $assoc[':idAntigo'] = $idAntigo;
         $st = $this->bd->prepare($cmd);
-
+        return ($st->execute($assoc) == 1);
+    }
+    
+    private function insereAlternativa (Alternativa $alt, $idQuestao) {
+        $cmd = "INSERT INTO alternativa(texto,gabarito,idQuestao)"
+			. " VALUES (\":texto\",:gabarito, :idQ)";
+        $assoc = array();
+        $assoc[':texto'] = $alt->getTexto();
+        $assoc[':gabarito'] = $alt->getEhCorreta();
+        $assoc[':idQ'] = $idQuestao;
+        
+        $st = $this->bd->prepare($cmd);
         return $st->execute($assoc);
     }
     
+    public function insereQuestaoTeste (QuestaoTeste $q, $idAntigo){
+        $cmd = "INSERT INTO questao(enunciado, ano, tipo, idAntigo)"
+			. " VALUES (\":enunciado\",:ano, :tipo, :idAntigo)";
+        $assoc = array();
+        $assoc[':enunciado'] = $q->getEnunciado();
+        $assoc[':ano'] = $q->getAno();
+        $assoc[':tipo'] = Questao::QUESTAO_DISSERTATIVA;
+        $assoc[':idAntigo'] = $idAntigo;
+        
+        // Começa uma transição (caso algo falhe, cancela tudo)
+        $this->bd->beginTransaction();
+        
+        $st = $this->bd->prepare($cmd);
+
+        if($st->execute($assoc)){
+	   while ($alt = $q->proximaAlternativa()){
+	       // se alguma alternativa não seja inserida corretamente
+	       if (!$this->insereAlternativa($alt, $q->getId())){
+		  $bd->rollBack(); // desfaz todas as inserções (da questao e das alternativas)
+		  return false;
+	       }
+	   }
+	   $this->bd->commit();
+	   return true;
+        }
+        return false;
+    }   
 }
