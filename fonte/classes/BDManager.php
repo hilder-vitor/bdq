@@ -128,56 +128,70 @@ class BDManager{
         return $alternativas;
     }
     
-    private function selecionaUmaQuestao($id = null, $enunciado = null){
-        if ($id === null && $enunciado === null){
-	   return null;
-        }
-        $cmd = 'SELECT * FROM questao WHERE 1 = 1';
-        $assoc = array();
-        if ($id != null){
-	        $cmd .= 'AND id_questao = :id ';
-	        $assoc[':id'] = $id;
-        }
-        if ($enunciado != null){
-	        $cmd .= 'AND enunciado = :enunciado ';
-	        $assoc[':enunciado'] = $enunciado;
-        }
-        $st = $this->bd->prepare($cmd);
-        if($st->execute($assoc)){
-	   $linha = $st->fetch(PDO::FETCH_ASSOC);
-	   // se é uma questão dissertativa
-	   if ($linha['tipo'] == Questao::QUESTAO_DISSERTATIVA){
-	       return new QuestaoDisserativa($linha['id_questao'], $linha['enunciado'], $linha['ano']);
-	   }
-	   // se é uma questão alternativa
-	   if ($linha['tipo'] == Questao::QUESTAO_ALTERNATIVA){
-	       $questao = new QuestaoTeste($linha['id_questao'], $linha['enunciado'], $linha['ano']);
-	       // seleciona alternativas
-	       foreach ($this->selecionaAlternativas($linha['id_questao']) as $alt){
-		  $questao->adicionaAlternativa($alt['texto'], $alt['gabarito']);
-	       }
-	       return $questao;
-	   }
-        }
-        return null;
-    }
 
     /**
-     *  TODO: IMPLEMENTAR ESTE MÉTODO
-     * 
+     *  Busca por questões no banco de dados.
+     *  
      * 
      * @param int $id
      * @param Filtro[] $filtros
      * @param String $enunciado
      * @param int $tipo Questao::QUESTAO_ALTERNATIVA ou Questao::QUESTAO_DISSERTATIVA
-     * @return Se for passado o id ou o enunciado
+     * @return Se for passado o id ou o enunciado, é devolvido um objeto do tipo QuestaoDissertativa
+     *  ou QuestaoAlternativa, ou ainda null (se não for encontrado).
+     *	       Caso nem o id nem o enunciado seja passado, um vetor de objetos 
+     *	       é devolvido (ou um vetor vazio).
      */
     public function selecionaQuestao ($id = null, $filtros = array(), $enunciado = null, $tipo = null){
-        if ($id != null || $enunciado != null){
-	   return $this->selecionaUmaQuestao($id, $enunciado);
+        $cmd = 'SELECT * FROM questao WHERE 1 = 1 ';
+        $assoc = array();
+        if ($id != null){
+	   $cmd .= 'AND idQuestao = :id ';
+	   $assoc[':id'] = $id;
         }
         
-    }    
+        if ($enunciado != null){
+	   $cmd .= 'AND enunciado = :enun ';
+	   $assoc[':enun'] = $enunciado;
+        }
+        if ($tipo !== null){
+	   $cmd .= 'AND tipo = :tipo ';
+	   $assoc[':tipo'] = $tipo;
+        }
+        if (is_array($filtros) && count($filtros) > 0){
+	   $inArg = '(';
+	   foreach($filtros as $filtro){
+	       $inArg .= implode(',', $filtro->getListaIdsFilhos());
+	       $inArg .= ','.$filtro->getId();
+	   }
+	   $inArg .= ')';
+	   $cmd .= " AND IN $inArg ";
+        }
+        
+        $st = $this->bd->prepare($cmd);
+        if($st->execute($assoc)){
+	   $resp = array();
+	   while ($linha = $st->fetch(PDO::FETCH_ASSOC)){
+	       if ($linha['tipo'] == Questao::QUESTAO_DISSERTATIVA){
+		  $resp[] = new QuestaoDisserativa($linha['idQuestao'], $linha['enunciado'], $linha['ano']);
+
+	       }else if ($linha['tipo'] == Questao::QUESTAO_ALTERNATIVA){
+		  $q = new QuestaoTeste($linha['idQuesta'], $linha['enunciado'], $linha['ano']);
+		  foreach($this->selecionaAlternativas($linha['idQuestao']) as $alt){
+		      $q->adicionaAlternativa($alt['texto'], $alt['gabarito']);
+		  }
+	       }
+	   }
+        }
+        
+        if ($id != null || $enunciado != null){
+	   if (count($resp) > 0){
+	       return current($resp);
+	   }
+	   return null;
+        }
+        return $resp;
+    }
     
     public function insereQuestaoDissertativa (QuestaoDisserativa $q, $idAntigo){
         $cmd = "INSERT INTO questao(enunciado, ano, tipo, id_antigo)"
