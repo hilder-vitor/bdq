@@ -73,4 +73,23 @@ class Questao {
 	   $this->filtros[$f->getId()] = $f;
         }
     }
+    
+    /**
+     *
+     * @param int $id
+     * @return Filtro[] Se for passado o id do filtro, será devolvido o filtro correspondente
+     * a este id (caso ele esteja associado à essa questão) ou null.
+     * 
+     *	   Se não for passado o id, será um vetor indexado pelos ids contendo todos
+     * os filtros associados a essa questão.
+     */
+    public function getFiltro($id = null){
+        if ($id == null){
+	   return $this->filtros;
+        }
+        if (isset($this->filtros[$id])){
+	   return $this->filtros[$id];
+        }
+        return null;
+    }
 }

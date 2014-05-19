@@ -158,6 +158,16 @@ class BDManager{
         if (is_array($filtros) && count($filtros) > 0){
 	   $inArg = '(';
 	   foreach($filtros as $filtro){
+	       /*
+	        * --------------------------------------------------------------
+	        * 
+	        *  FIXME: 
+	        *		    deveria incluir os ids dos pais
+	        *		    na busca, não os dos filhos 
+	        *
+	        *
+	        *  --------------------------------------------------------------
+	        */
 	       $inArg .= implode(',', $filtro->getListaIdsFilhos());
 	       $inArg .= ','.$filtro->getId();
 	   }
@@ -189,18 +199,36 @@ class BDManager{
         }
         return $resp;
     }
-    
-    public function insereQuestaoDissertativa (QuestaoDisserativa $q, $idAntigo){
-        $cmd = "INSERT INTO questao(enunciado, ano, tipo, idAntigo)"
-			. " VALUES (:enunciado,:ano,:tipo,:idAntigo)";
+
+    /**
+     *	   Associa todos os filtros (e seus filhos) recebidos à questão
+     * cujo id foi passado.
+     * @param int $idQuestao
+     * @param Filtro[] $vetorFiltros
+     * @return boolean
+     */
+    private function insereRelacaoQuestaoFiltros($idQuestao, $vetorFiltros) {
+        $cmd = "INSERT INTO relacaoFiltroQuestao (idQuestao,idFiltro)"
+			. " VALUES (:idQ,:idF)";
         $assoc = array();
-        $assoc[':enunciado'] = $q->getEnunciado();
-        $assoc[':ano'] = $q->getAno();
-        $assoc[':tipo'] = Questao::QUESTAO_DISSERTATIVA;
-        $assoc[':idAntigo'] = $idAntigo;
         $st = $this->bd->prepare($cmd);
-        return ($st->execute($assoc) == 1);
+        $assoc[':idQ'] = $idQuestao;
+        foreach($vetorFiltros as $filtro){
+	   $assoc[':idF'] = $filtro->getId();
+	   if ($st->execute($assoc)){
+	       foreach ($filtro->getListaIdsFilhos() as $idF){
+		  $assoc[':idF'] = $idF;
+		  if (!$st->execute($assoc)){
+		      return false;
+		  }
+	       }
+	   }else{
+	       return false;
+	   }
+        }
+        return true;
     }
+    
     
     private function insereAlternativa (Alternativa $alt, $idQuestao) {
         $cmd = "INSERT INTO alternativa(textoAlternativa,gabarito,idQuestao)"
@@ -237,8 +265,26 @@ class BDManager{
 	       }
 	   }
 	   $this->bd->commit();
+	   $this->insereRelacaoQuestaoFiltros($q->getId(), $q->getFiltro());
 	   return true;
         }
         return false;
     }
+    
+    public function insereQuestaoDissertativa (QuestaoDisserativa $q, $idAntigo){
+        $cmd = "INSERT INTO questao(enunciado, ano, tipo, idAntigo)"
+			. " VALUES (:enunciado,:ano,:tipo,:idAntigo)";
+        $assoc = array();
+        $assoc[':enunciado'] = $q->getEnunciado();
+        $assoc[':ano'] = $q->getAno();
+        $assoc[':tipo'] = Questao::QUESTAO_DISSERTATIVA;
+        $assoc[':idAntigo'] = $idAntigo;
+        $st = $this->bd->prepare($cmd);
+        if ($st->execute($assoc)){
+	   $this->insereRelacaoQuestaoFiltros($q->getId(), $q->getFiltro());
+	   return true;
+        }
+        return false;
+    }
+
 }
