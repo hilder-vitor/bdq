@@ -48,9 +48,13 @@ class BDManager{
      *		  for encontrado, um objeto do tipo Filtro é devolvido.
      *		  Em todos os outros casos, um vetor de Filtros é devolvido.
      */
-    public function selecionaFiltro($id = null, $nome = null, $idPai = null, $pegarFilhos = false){
+    public function selecionaFiltro($id = null, $nome = null, $idPai = null, $pegarFilhos = false, $idAntigo = null){
         $cmd = 'SELECT * FROM filtros WHERE 1 = 1 ';
         $assoc = array();
+        if ($idAntigo != null){
+	   $cmd .= 'AND idAntigo = ? ';
+	   $assoc[] = $idAntigo;
+        }
         if ($id != null){
 	   $cmd .= 'AND idFiltro = ? ';
 	   $assoc[] = $id;
@@ -207,7 +211,7 @@ class BDManager{
      * @param Filtro[] $vetorFiltros
      * @return boolean
      */
-    private function insereRelacaoQuestaoFiltros($idQuestao, $vetorFiltros) {
+    public function insereRelacaoQuestaoFiltros($idQuestao, $vetorFiltros) {
         $cmd = "INSERT INTO relacaoFiltroQuestao (idQuestao,idFiltro)"
 			. " VALUES (:idQ,:idF)";
         $assoc = array();
