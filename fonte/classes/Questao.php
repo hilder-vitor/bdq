@@ -15,7 +15,7 @@ class Questao {
      *  (guardando apenas o 1º nível. Os filhos estão nos vetores de
      *  filhos dos próprios filtros)
      */
-    protected $filtros;
+    protected $filtros = array();
     
     public function __construct($id, $enunciado, $ano) {
         $this->ano = $ano;
