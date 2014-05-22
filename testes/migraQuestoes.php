@@ -104,6 +104,7 @@ use classes_\Questao as Questao;
 $bdq = new BDManager();
 
 $total = 0;
+$comVest = 0;
 while ($dados = mysql_fetch_assoc($rsQuestao)){
     
     $enunciado = arrumaAcento($dados['texto']);
@@ -111,6 +112,9 @@ while ($dados = mysql_fetch_assoc($rsQuestao)){
     $unidade = pegaUnidade($enunciado);
     // se conseguiu achar a unidade
     if ($unidade != ''){
+        
+        $comVest++;
+        
         $idQuestao = $dados["id_questao"]; // relacionado com id_antigo na tabela filtros
         $idDisciplina = $dados["id_disciplina"];
         $idFiltro = $dados['filtro_num'];
@@ -155,11 +159,6 @@ while ($dados = mysql_fetch_assoc($rsQuestao)){
         if ($filtro != false){
 	   $questao->adicionaFiltro($filtro);
         }
-//        if ($total++ % 10 == 0){
-//	   var_dump($questao->getEnunciado());
-//	   echo "\n\n--\n\n";
-//        }
-//
         if ($tipo == Questao::QUESTAO_ALTERNATIVA){
 	   echo "TESTE\n";
 	   $bdq->insereQuestaoTeste($questao, $idQuestao);
@@ -168,7 +167,9 @@ while ($dados = mysql_fetch_assoc($rsQuestao)){
 	   $bdq->insereQuestaoDissertativa($questao, $idQuestao);
         }
     }
+
+    $total++;
 }
 
-echo "QNT SEM VEST: $semVest\n";
+echo "QNT SEM VEST: $comVest\n";
 echo "TOTAL: $total\n";
