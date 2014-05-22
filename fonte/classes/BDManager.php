@@ -247,8 +247,8 @@ class BDManager{
     }
     
     public function insereQuestaoTeste (QuestaoTeste $q, $idAntigo){
-        $cmd = "INSERT INTO questao(enunciado, ano, tipo, idAntigo)"
-			. " VALUES (:enunciado,:ano, :tipo, :idAntigo)";
+        $cmd = "INSERT INTO questao(idQuestao, enunciado, ano, tipo, idAntigo)"
+			. " VALUES ($idAntigo, :enunciado,:ano, :tipo, :idAntigo)";
         $assoc = array();
         $assoc[':enunciado'] = $q->getEnunciado();
         $assoc[':ano'] = $q->getAno();
@@ -276,8 +276,8 @@ class BDManager{
     }
     
     public function insereQuestaoDissertativa (QuestaoDisserativa $q, $idAntigo){
-        $cmd = "INSERT INTO questao(enunciado, ano, tipo, idAntigo)"
-			. " VALUES (:enunciado,:ano,:tipo,:idAntigo)";
+        $cmd = "INSERT INTO questao(idQuestao, enunciado, ano, tipo, idAntigo)"
+			. " VALUES ($idAntigo, :enunciado,:ano,:tipo,:idAntigo)";
         $assoc = array();
         $assoc[':enunciado'] = $q->getEnunciado();
         $assoc[':ano'] = $q->getAno();
