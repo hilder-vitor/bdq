@@ -60,7 +60,7 @@ class BDManager{
 	   $assoc[] = $id;
         }
         if ($nome != null){
-	   $cmd .= 'AND filtro = ? ';
+	   $cmd .= 'AND filtro LIKE ? ';
 	   $assoc[] = $nome;
         }
         if ($idPai !== null){
