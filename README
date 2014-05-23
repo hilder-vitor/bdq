@@ -7,3 +7,24 @@
 
 Feito em PHP
 
+
+******  COMO USAR  ************
+
+1) Buscar FILTROS:
+
+1.1) Para buscar os primeiros filtros (os que não têm pai)
+
+	http://localhost/bdq/fonte/api/getFiltro.php?query=primeiroNivel
+
+1.2) Para buscar os filtros filhos (especializações de um filtro)
+	
+	1.2.1) Por id
+		http://localhost/bdq/fonte/api/getFiltro.php?query=filhos&idFiltroPai=1261
+
+	1.2.2) Por nome
+		http://localhost/bdq/fonte/api/getFiltro.php?query=filhos&nomeFiltroPai=disciplina
+		http://localhost/bdq/fonte/api/getFiltro.php?query=filhos&nomeFiltroPai=Disciplina
+		(não diferencia maiúsculas de minúsculas)
+
+
+2) Buscar QUESTOES:
