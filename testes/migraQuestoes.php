@@ -19,6 +19,7 @@ function converteImagens ($enunciado){
         $p = '/..\/imagens\/questao\/[a-zA-Z]+\/[0-9]+\.[a-zA-Z]+/';
         return preg_replace_callback($p, "converteParaBase64", $enunciado);
     }
+    return $enunciado;
 }
 
 function arrumaAcento ($disciplina){
@@ -136,7 +137,6 @@ while ($dados = mysql_fetch_assoc($rsQuestao)){
         if ($filtro != false){
 	   $questao->adicionaFiltro($filtro);
         }
-        //var_dump($questao);
         
         // -----------------------------------------
         //      Adiciona a unidade como filtro
@@ -160,16 +160,20 @@ while ($dados = mysql_fetch_assoc($rsQuestao)){
 	   $questao->adicionaFiltro($filtro);
         }
         if ($tipo == Questao::QUESTAO_ALTERNATIVA){
-	   echo "TESTE\n";
 	   $bdq->insereQuestaoTeste($questao, $idQuestao);
         }else{
-	   echo "DISSERTATIVA\n";
 	   $bdq->insereQuestaoDissertativa($questao, $idQuestao);
+        }
+        if($comVest % 15 == 0){
+	   echo "$comVest\n";
         }
     }
 
     $total++;
+    if ($total % 1000 == 0){
+        var_dump($questao);
+    }
 }
 
-echo "QNT SEM VEST: $comVest\n";
+echo "QNT COM VEST: $comVest\n";
 echo "TOTAL: $total\n";
