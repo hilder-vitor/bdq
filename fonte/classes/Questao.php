@@ -1,7 +1,7 @@
 <?php
 namespace classes_;
 
-class Questao {
+abstract class Questao {
 
     /* definindo constanstes para os tipos de questão */
     const QUESTAO_ALTERNATIVA = 1;
@@ -92,4 +92,6 @@ class Questao {
         }
         return null;
     }
+    
+    public abstract function getTipo();
 }

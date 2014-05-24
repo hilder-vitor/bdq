@@ -135,71 +135,47 @@ class BDManager{
      *  
      * 
      * @param int $id
-     * @param Filtro[] $filtros
-     * @param String $enunciado
+     * @param Filtro[] $filtros 
      * @param int $tipo Questao::QUESTAO_ALTERNATIVA ou Questao::QUESTAO_DISSERTATIVA
-     * @return Se for passado o id ou o enunciado, é devolvido um objeto do tipo QuestaoDissertativa
-     *  ou QuestaoAlternativa, ou ainda null (se não for encontrado).
-     *	       Caso nem o id nem o enunciado seja passado, um vetor de objetos 
+     * @return Caso nem o id nem o enunciado seja passado, um vetor de objetos 
      *	       é devolvido (ou um vetor vazio).
      */
-    public function selecionaQuestao ($id = null, $filtros = array(), $enunciado = null, $tipo = null){
-        $cmd = 'SELECT * FROM questao WHERE 1 = 1 ';
+    public function selecionaQuestao ($idInicial, $qntQuestoes, $filtros = array(), $tipo = null){
+        $cmd = 'SELECT questao.idQuestao, questao.tipo,'
+	   . ' questao.enunciado, questao.ano FROM questao';
         $assoc = array();
-        if ($id != null){
-	   $cmd .= 'AND idQuestao = :id ';
-	   $assoc[':id'] = $id;
-        }
-        
-        if ($enunciado != null){
-	   $cmd .= 'AND enunciado = :enun ';
-	   $assoc[':enun'] = $enunciado;
-        }
+
         if ($tipo !== null){
 	   $cmd .= 'AND tipo = :tipo ';
 	   $assoc[':tipo'] = $tipo;
         }
         if (is_array($filtros) && count($filtros) > 0){
-	   $inArg = '(';
+	   $cont = 0;
 	   foreach($filtros as $filtro){
-	       /*
-	        * --------------------------------------------------------------
-	        * 
-	        *  FIXME: 
-	        *		    deveria incluir os ids dos pais
-	        *		    na busca, não os dos filhos 
-	        *
-	        *
-	        *  --------------------------------------------------------------
-	        */
+	       $cmd .= " JOIN relacaoFiltroQuestao as R$cont ON"
+		  . " R$cont.idQuestao = questao.idQuestao";
+	       $inArg = '(';
 	       $inArg .= implode(',', $filtro->getListaIdsFilhos());
 	       $inArg .= ','.$filtro->getId();
+	       $inArg .= ')';
+	       $cmd .= " AND R$cont.idFiltro IN ".preg_replace('/\(,/', '(', $inArg);
+	       $cont++;
 	   }
-	   $inArg .= ')';
-	   $cmd .= " AND IN $inArg ";
         }
-        
-        $st = $this->bd->prepare($cmd);
+        $resp = array();
+        $st = $this->bd->prepare($cmd." AND $idInicial < questao.idQuestao LIMIT $qntQuestoes");
         if($st->execute($assoc)){
-	   $resp = array();
 	   while ($linha = $st->fetch(PDO::FETCH_ASSOC)){
 	       if ($linha['tipo'] == Questao::QUESTAO_DISSERTATIVA){
-		  $resp[] = new QuestaoDisserativa($linha['idQuestao'], $linha['enunciado'], $linha['ano']);
-
+		  $resp[$linha['idQuestao']] = new QuestaoDisserativa($linha['idQuestao'], $linha['enunciado'], $linha['ano']);
 	       }else if ($linha['tipo'] == Questao::QUESTAO_ALTERNATIVA){
 		  $q = new QuestaoTeste($linha['idQuesta'], $linha['enunciado'], $linha['ano']);
 		  foreach($this->selecionaAlternativas($linha['idQuestao']) as $alt){
 		      $q->adicionaAlternativa($alt['texto'], $alt['gabarito']);
 		  }
+		  $resp[$linha['idQuestao']] = $q;
 	       }
 	   }
-        }
-        
-        if ($id != null || $enunciado != null){
-	   if (count($resp) > 0){
-	       return current($resp);
-	   }
-	   return null;
         }
         return $resp;
     }

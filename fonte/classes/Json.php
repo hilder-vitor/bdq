@@ -30,4 +30,45 @@ class Json {
 		  'nome' => $filtro->getNome(),
 		  'idPai' => $filtro->getIdPai());
     }
+    
+    public static function transformaVetorDeQuestoesEmJson($questoes){
+        $vetor = array();
+        foreach ($questoes as $questao){
+	   $vetor[] = Json::transformaQuestaoEmArray($questao);
+        }
+        return json_encode($vetor);
+    }
+    
+    public static function transformaQuestaoEmArray(Questao $questao){
+        if ($questao->getTipo() == Questao::QUESTAO_ALTERNATIVA){
+	   return Json::transformaQuestaoTesteEmArray($questao);
+        }
+        return Json::transformaQuestaoDissertativaEmArray($questao);
+    }
+    
+    public static function transformaQuestaoDissertativaEmArray(QuestaoDisserativa $questao){
+        return array('idQuestao' => $questao->getId(),
+		  'enunciado' => $questao->getEnunciado(),
+		  'tipo' => $questao->getTipo(),
+		  'ano' => $questao->getAno());
+    }
+    
+    public static function transformaQuestaoTesteEmArray(QuestaoTeste $questao){
+        $alt = array();
+        foreach($questao->getAlternativas() as $alternativa){
+	   $alt[] = Json::transformaAlternativaEmArray($alternativa);
+        }
+        return array('idQuestao' => $questao->getId(),
+		  'enunciado' => $questao->getEnunciado(),
+		  'tipo' => $questao->getTipo(),
+		  'ano' => $questao->getAno(),
+		  'alternativas' => $alt);
+    }
+    
+    public static function transformaAlternativaEmArray(Alternativa $alt){
+        return array('idAlternativa' => $alt->getId(),
+		   'texto' => $alt->getTexto(),
+		   'ehCorreta' => $alt->getEhCorreta());
+    }
+   
 }

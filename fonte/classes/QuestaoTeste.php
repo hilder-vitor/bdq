@@ -38,5 +38,8 @@ class QuestaoTeste extends Questao {
         $this->alternativas[] = $alternativa;
     }
 
+    public function getTipo() {
+        return Questao::QUESTAO_ALTERNATIVA;
+    }
 
 }
