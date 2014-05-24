@@ -144,11 +144,6 @@ class BDManager{
         $cmd = 'SELECT questao.idQuestao, questao.tipo,'
 	   . ' questao.enunciado, questao.ano FROM questao';
         $assoc = array();
-
-        if ($tipo !== null){
-	   $cmd .= 'AND tipo = :tipo ';
-	   $assoc[':tipo'] = $tipo;
-        }
         if (is_array($filtros) && count($filtros) > 0){
 	   $cont = 0;
 	   foreach($filtros as $filtro){
@@ -163,7 +158,15 @@ class BDManager{
 	   }
         }
         $resp = array();
-        $st = $this->bd->prepare($cmd." AND $idInicial < questao.idQuestao LIMIT $qntQuestoes");
+        $cmd = $cmd." AND $idInicial < questao.idQuestao ";
+        if ($tipo !== null){
+	   $cmd .= ' AND tipo = :tipo ';
+	   $assoc[':tipo'] = $tipo;
+        }
+        
+        $st = $this->bd->prepare($cmd." LIMIT $qntQuestoes");
+        var_dump($st);
+        var_dump($tipo);
         if($st->execute($assoc)){
 	   while ($linha = $st->fetch(PDO::FETCH_ASSOC)){
 	       if ($linha['tipo'] == Questao::QUESTAO_DISSERTATIVA){
@@ -228,7 +231,7 @@ class BDManager{
         $assoc = array();
         $assoc[':enunciado'] = $q->getEnunciado();
         $assoc[':ano'] = $q->getAno();
-        $assoc[':tipo'] = Questao::QUESTAO_DISSERTATIVA;
+        $assoc[':tipo'] = Questao::QUESTAO_ALTERNATIVA;
         $assoc[':idAntigo'] = $idAntigo;
         
         // Começa uma transição (caso algo falhe, cancela tudo)
