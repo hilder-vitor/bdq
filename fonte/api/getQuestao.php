@@ -48,7 +48,6 @@ if (isset($idsFiltros)){
 	   $filtros[] = $filtro;
         }
     }
-    echo "selecionaQuestao($idInicial, $qntQuestoes, $filtros,$tipo);<br>";
     $questoes = $bd->selecionaQuestao($idInicial, $qntQuestoes, $filtros,$tipo);
     
     exit(Json::transformaVetorDeQuestoesEmJson($questoes));    
