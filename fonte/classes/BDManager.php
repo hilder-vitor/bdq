@@ -1,6 +1,7 @@
 <?php
 
 namespace classes_;
+
 use PDO;
 use PDOException;
 
@@ -121,10 +122,9 @@ class BDManager{
         $this->bd->query($cmd);
         $alternativas = array();
         foreach ($this->bd->query($cmd) as $alt){
-	   $alternativas[$alt['idAlternativa']] = array('idAlternativa' => $alt['idAlternativa'],
-				'idQuestao' => $alt['idQuestao'],
-				'texto' => $alt['textoAlternativa'],
-				'gabarito' => ($alt['gabarito'] == 1));
+	   $alternativa = new Alternativa($alt['idAlternativa'], 
+			     $alt['textoAlternativa'], ($alt['gabarito'] == 1));
+	   $alternativas[$alt['idAlternativa']] = $alternativa;
         }
         return $alternativas;
     }
@@ -165,16 +165,14 @@ class BDManager{
         }
         
         $st = $this->bd->prepare($cmd." LIMIT $qntQuestoes");
-        var_dump($st);
-        var_dump($tipo);
         if($st->execute($assoc)){
 	   while ($linha = $st->fetch(PDO::FETCH_ASSOC)){
 	       if ($linha['tipo'] == Questao::QUESTAO_DISSERTATIVA){
 		  $resp[$linha['idQuestao']] = new QuestaoDisserativa($linha['idQuestao'], $linha['enunciado'], $linha['ano']);
 	       }else if ($linha['tipo'] == Questao::QUESTAO_ALTERNATIVA){
-		  $q = new QuestaoTeste($linha['idQuesta'], $linha['enunciado'], $linha['ano']);
+		  $q = new QuestaoTeste($linha['idQuestao'], $linha['enunciado'], $linha['ano']);
 		  foreach($this->selecionaAlternativas($linha['idQuestao']) as $alt){
-		      $q->adicionaAlternativa($alt['texto'], $alt['gabarito']);
+		      $q->adicionaAlternativa($alt);
 		  }
 		  $resp[$linha['idQuestao']] = $q;
 	       }
