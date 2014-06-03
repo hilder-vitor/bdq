@@ -212,12 +212,13 @@ class BDManager{
     
     
     private function insereAlternativa (Alternativa $alt, $idQuestao) {
-        $cmd = "INSERT INTO alternativa(textoAlternativa,gabarito,idQuestao)"
-			. " VALUES (:texto,:gabarito, :idQ)";
+        $cmd = "INSERT INTO alternativa(textoAlternativa,gabarito,idQuestao,letra)"
+			. " VALUES (:texto,:gabarito, :idQ, :letra)";
         $assoc = array();
         $assoc[':texto'] = $alt->getTexto();
         $assoc[':gabarito'] = $alt->getEhCorreta();
         $assoc[':idQ'] = $idQuestao;
+        $assoc[':letra'] = $alt->getLetra();
         
         $st = $this->bd->prepare($cmd);
         return $st->execute($assoc);

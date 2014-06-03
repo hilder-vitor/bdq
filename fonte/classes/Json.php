@@ -36,7 +36,11 @@ class Json {
         foreach ($questoes as $questao){
 	   $vetor[] = Json::transformaQuestaoEmArray($questao);
         }
-        return json_encode($vetor);
+        $resp = array();
+        $resp['status'] = 0;
+        $resp['msg'] = 'OK';
+        $resp['questoes'] = $vetor;
+        return json_encode($resp);
     }
     
     public static function transformaQuestaoEmArray(Questao $questao){

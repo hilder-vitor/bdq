@@ -128,7 +128,7 @@ while ($dados = mysql_fetch_assoc($rsQuestao)){
 	   $sqlAlt = "SELECT * FROM alternativa WHERE id_questao = $idQuestao";
 	   $rsAlt = mysql_query($sqlAlt, $conexao);
 	   while ($lnAlt = mysql_fetch_assoc($rsAlt)){
-	       $questao->adicionaAlternativa(new classes_\Alternativa($lnAlt['id_alternativa'], $lnAlt['texto_alternativa'], $lnAlt['gabarito']));
+	       $questao->adicionaAlternativa(new classes_\Alternativa($lnAlt['id_alternativa'], $lnAlt['texto_alternativa'], $lnAlt['gabarito'], $lnAlt['letra']));
 	   }
         }else{
 	   $questao = new QuestaoDisserativa($idQuestao, $enunciado, $ano);

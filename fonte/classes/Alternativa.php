@@ -7,12 +7,14 @@ class Alternativa {
     
     private $id;
     private $texto;
+    private $letra = null;
     private $ehCorreta;
     
-    public function __construct($id, $texto, $ehCorreta = false) {
+    public function __construct($id, $texto, $ehCorreta = false, $letra = null) {
         $this->setId($id);
         $this->setTexto($texto);
         $this->setEhCorreta($ehCorreta);
+        $this->setLetra($letra);
     }
     
     
@@ -28,6 +30,10 @@ class Alternativa {
         return $this->ehCorreta;
     }
 
+    public function getLetra(){
+        return $this->letra;
+    }
+    
     public function setId($id) {
         if ($id > 0){
 	   $this->id = $id;
@@ -48,5 +54,10 @@ class Alternativa {
         }
     }
 
+    public function setLetra($l){
+        if ($l >= 'a' && $l <= 'z'){
+	   $this->letra = $l;
+        }
+    }
     
 }
