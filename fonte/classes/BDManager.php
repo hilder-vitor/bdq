@@ -123,7 +123,7 @@ class BDManager{
         $alternativas = array();
         foreach ($this->bd->query($cmd) as $alt){
 	   $alternativa = new Alternativa($alt['idAlternativa'], 
-			     $alt['textoAlternativa'], ($alt['gabarito'] == 1));
+			     $alt['textoAlternativa'], ($alt['gabarito'] == 1), $alt['letra']);
 	   $alternativas[$alt['idAlternativa']] = $alternativa;
         }
         return $alternativas;

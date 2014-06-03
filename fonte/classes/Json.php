@@ -51,7 +51,7 @@ class Json {
     }
     
     public static function transformaQuestaoDissertativaEmArray(QuestaoDisserativa $questao){
-        return array('idQuestao' => $questao->getId(),
+        return array('id' => $questao->getId(),
 		  'enunciado' => $questao->getEnunciado(),
 		  'tipo' => $questao->getTipo(),
 		  'ano' => $questao->getAno());
@@ -62,7 +62,7 @@ class Json {
         foreach($questao->getAlternativas() as $alternativa){
 	   $alt[] = Json::transformaAlternativaEmArray($alternativa);
         }
-        return array('idQuestao' => $questao->getId(),
+        return array('id' => $questao->getId(),
 		  'enunciado' => $questao->getEnunciado(),
 		  'tipo' => $questao->getTipo(),
 		  'ano' => $questao->getAno(),
@@ -72,6 +72,7 @@ class Json {
     public static function transformaAlternativaEmArray(Alternativa $alt){
         return array('idAlternativa' => $alt->getId(),
 		   'texto' => $alt->getTexto(),
+		   'letra' => $alt->getLetra(),
 		   'ehCorreta' => $alt->getEhCorreta());
     }
    
