@@ -131,16 +131,43 @@ class BDManager{
     
 
     /**
+     *	  Seleciona no banco de dados a questão cujo id seja igual ao
+     * id passado como argumento.
+     * 
+     * @param int $idQuestao
+     * @return QuestaoTeste|QuestaoDissertativa devolve um objeto do tipo QuestaoTeste ou do tipo
+     *	       QuestaoDissertativa ou null, caso não encontre.
+     */
+    public function selecionaQuestao ($idQuestao){
+        $cmd = 'SELECT * FROM questao WHERE idQuestao = :idQuestao';
+        $assoc = array();
+        $assoc[':idQuestao'] = $idQuestao;
+        $st = $this->bd->prepare($cmd);
+        if($st->execute($assoc)){
+	   $linha = $st->fetch(PDO::FETCH_ASSOC);
+	   if ($linha['tipo'] == Questao::QUESTAO_DISSERTATIVA){
+	       $questao = new QuestaoDisserativa($idQuestao, $linha['enunciado'], $linha['ano']);
+	   }else{
+	       $questao = new QuestaoTeste($idQuestao, $linha['enunciado'], $linha['ano']);
+	       foreach($this->selecionaAlternativas($idQuestao) as $alt){
+		  $questao->adicionaAlternativa($alt);
+	       }
+	   }
+	   return $questao;
+        }
+        return null;
+    }
+    
+    /**
      *  Busca por questões no banco de dados.
      *  
-     * 
-     * @param int $id
+     * @param int $idInicial
+     * @param int $qntQuestoes quantidade de questões solicitadas
      * @param Filtro[] $filtros 
      * @param int $tipo Questao::QUESTAO_ALTERNATIVA ou Questao::QUESTAO_DISSERTATIVA
-     * @return Caso nem o id nem o enunciado seja passado, um vetor de objetos 
-     *	       é devolvido (ou um vetor vazio).
+     * @return Questao[] Devolve um vetor de objetos do tipo questão
      */
-    public function selecionaQuestao ($idInicial, $qntQuestoes, $filtros = array(), $tipo = null){
+    public function selecionaQuestoes ($idInicial, $qntQuestoes, $filtros = array(), $tipo = null){
         $cmd = 'SELECT questao.idQuestao, questao.tipo,'
 	   . ' questao.enunciado, questao.ano FROM questao';
         $assoc = array();
@@ -158,7 +185,7 @@ class BDManager{
 	   }
         }
         $resp = array();
-        $cmd = $cmd." AND $idInicial < questao.idQuestao ";
+        $cmd = $cmd." AND questao.idQuestao >= $idInicial";
         if ($tipo !== null){
 	   $cmd .= ' AND tipo = :tipo ';
 	   $assoc[':tipo'] = $tipo;

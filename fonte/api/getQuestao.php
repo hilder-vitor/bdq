@@ -48,7 +48,22 @@ if (isset($idsFiltros)){
 	   $filtros[] = $filtro;
         }
     }
-    $questoes = $bd->selecionaQuestao($idInicial, $qntQuestoes, $filtros,$tipo);
+    $questoes = $bd->selecionaQuestoes($idInicial, $qntQuestoes, $filtros,$tipo);
     
-    exit(Json::transformaVetorDeQuestoesEmJson($questoes));    
+    exit(Json::transformaVetorDeQuestoesEmJson($questoes));
+
+// Busca questões pelos ids das questões    
+}else if (isset($idsQuestoes)){
+    $bd = new BDManager();
+    $questoes = array();
+    $vetIdsQuestoes = explode('|', $idsQuestoes);
+    foreach($vetIdsQuestoes as $idQuestao){
+        $questao = $bd->selecionaQuestao($idQuestao);
+        if (null != $questao){
+	   $questoes[] = $questao;
+        }
+    }
+    exit(Json::transformaVetorDeQuestoesEmJson($questoes));
+}else{
+    exit(Json::getJsonErrosParametros());
 }

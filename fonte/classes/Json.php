@@ -76,4 +76,10 @@ class Json {
 		   'ehCorreta' => $alt->getEhCorreta());
     }
    
+    public static function getJsonErrosParametros(){
+        $resp = array();
+        $resp['status'] = 1;
+        $resp['msg'] = 'ERRO: os parâmetros passados não foram reconhecidos.';
+        return json_encode($resp);
+    }
 }
